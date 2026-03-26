@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="mg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictor V50 - Mi Mine</title>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .game-container {
+            background-color: #1e293b;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        h2 { color: #fbbf24; margin-bottom: 20px; }
+
+        /* Grid 5x5 */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            background-color: #0f172a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            aspect-ratio: 1/1;
+            background-color: #334155;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+
+        .cell.active {
+            background-color: #ef4444;
+            color: white;
+            box-shadow: 0 0 15px #ef4444;
+            transform: scale(1.05);
+        }
+
+        /* Niveau de jeu */
+        .levels-container { margin-bottom: 20px; }
+        .levels-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+        .level-btn {
+            background-color: #334155;
+            border: 1px solid #475569;
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .level-btn.active {
+            background-color: #fbbf24;
+            color: #0f172a;
+            font-weight: bold;
+        }
+
+        /* Controls & Results */
+        .controls button {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border: none;
+            color: #0f172a;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .results {
+            background-color: #0f172a;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .results p { margin: 5px 0; }
+        .results span { color: #10b981; font-weight: bold; }
+        .time-display { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h2>MI MINE PREDICTOR</h2>
+        <div class="time-display">Ora: <span id="current-time">00:00:00</span></div>
+
+        <div id="grid" class="grid-layout">
+            </div>
+
+        <div class="levels-container">
+            <p style="font-size: 14px; margin-bottom: 8px;">Niveau de jeu:</p>
+            <div class="levels-grid">
+                <button class="level-btn active" onclick="setMines(2, this)">2 mines</button>
+                <button class="level-btn" onclick="setMines(3, this)">3 mines</button>
+                <button class="level-btn" onclick="setMines(4, this)">4 mines</button>
+                <button class="level-btn" onclick="setMines(5, this)">5 mines</button>
+                <button class="level-btn" onclick="setMines(6, this)">6 mines</button>
+                <button class="level-btn" onclick="setMines(7, this)">7 mines</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="generatePrediction()">PREDICTION</button>
+        </div>
+
+        <div class="results">
+            <p>Côte Moyen: <span id="cote-moyen">0.00</span></p>
+            <p>Côte Max: <span id="cote-max">0.00</span></p>
+        </div>
+    </div>
+
+    <script>
+        let currentMines = 2;
+
+        // Famantaranandro 24h
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('current-time').innerText = 
+                now.toLocaleTimeString('fr-FR', { hour12: false });
+        }, 1000);
+
+        // Famoronana ny vata 25
+        const grid = document.getElementById('grid');
+        for (let i = 0; i < 25; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.innerText = '★';
+            cell.id = `cell-${i}`;
+            grid.appendChild(cell);
+        }
+
+        function setMines(count, btn) {
+            currentMines = count;
+            document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function generatePrediction() {
+            // Animation kely alohan'ny mamoaka valiny
+            document.querySelectorAll('.cell').forEach(c => {
+                c.classList.remove('active');
+                c.innerText = '★';
+            });
+
+            // Misafidy vata miankina amin'ny isan'ny mine
+            let chosen = [];
+            while(chosen.length < currentMines) {
+                let r = Math.floor(Math.random() * 25);
+                if(!chosen.includes(r)) chosen.push(r);
+            }
+
+            // Asehoy ny valiny
+            setTimeout(() => {
+                chosen.forEach(id => {
+                    const cell = document.getElementById(`cell-${id}`);
+                    cell.classList.add('active');
+                    cell.innerText = '💣';
+                });
+
+                // Kajy Côte
+                let base = currentMines * 1.8;
+                document.getElementById('cote-moyen').innerText = (Math.random() * base + base).toFixed(2);
+                document.getElementById('cote-max').innerText = (Math.random() * (base * 4) + (base * 2)).toFixed(2);
+            }, 300);
+        }
+    </script>
+</body>
+</html>
